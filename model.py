@@ -33,7 +33,7 @@ class MetricPredictor:
         # Don't really need to store the model, as prophet models are not retrainable
         # But storing it as an example for other models that can be retrained
         self.model = Prophet(
-            daily_seasonality=True, weekly_seasonality=True, yearly_seasonality=True
+            daily_seasonality=True, weekly_seasonality=True, yearly_seasonality=False
         )
 
         _LOGGER.info(

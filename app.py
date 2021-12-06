@@ -2,7 +2,7 @@
 import time
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from multiprocessing import Pool, Process, Queue
 from multiprocessing import cpu_count
 from functools import partial
@@ -82,6 +82,7 @@ class MainHandler(tornado.web.RequestHandler):
 
             metric_name = predictor_model.metric.metric_name
             prediction = predictor_model.predict_value(datetime.now())
+            prediction_15 = predictor_model.predict_value(datetime.now() + timedelta(minutes=15))
 
             # Check for all the columns available in the prediction
             # and publish the values for each of them
@@ -101,6 +102,10 @@ class MainHandler(tornado.web.RequestHandler):
 
             # create a new time series that has value_type=anomaly
             # this value is 1 if an anomaly is found 0 if not
+            GAUGE_DICT[metric_name].labels(
+                **predictor_model.metric.label_config, value_type="yhat_15"
+            ).set(prediction_15["yhat"][0])
+
             GAUGE_DICT[metric_name].labels(
                 **predictor_model.metric.label_config, value_type="anomaly"
             ).set(anomaly)
@@ -140,6 +145,9 @@ def train_individual_model(predictor_model, initial_run):
         start_time=data_start_time,
         end_time=datetime.now(),
     )[0]
+
+    # Remove NaN values
+    new_metric_data["values"] = filter(lambda x: x[1].lower() != "nan", new_metric_data["values"])
 
     # Train the new model
     start_time = datetime.now()

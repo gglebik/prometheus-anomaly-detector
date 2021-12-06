@@ -1,0 +1,3 @@
+FROM quay.io/aicoe/prometheus-anomaly-detector:latest
+COPY app.py /opt/app-root/src/
+COPY model.py /opt/app-root/src/
